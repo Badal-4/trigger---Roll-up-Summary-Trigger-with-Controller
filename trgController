@@ -34,8 +34,16 @@ public class trgController
         {
             for(Account acc : accList)
             {
+               if(acc.Contacts.size() > 0)
+                {
                 acc.nop__c = acc.Contacts.size();
                 acctList.add(acc);
+                }
+                else 
+                {
+                    acc.nop__c = 0;
+                    acctList.add(acc);
+                }
             }
         }
         
