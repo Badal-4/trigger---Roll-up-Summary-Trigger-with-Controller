@@ -1,0 +1,47 @@
+//Roll up summary trigger to count number of related Contacts 
+public class trgController 
+{
+    public static void trgMethod(List<Contact> newList,Map<Id,Contact> oldMap)
+    {
+        Set<Id> accIds = new Set<Id>();
+        
+        for(Contact newCon : newList)
+        {
+            if(oldMap != null)
+            {
+                Contact oldCon = oldMap.get(newCon.Id);
+                
+                if(oldCon.AccountId != newCon.AccountId)
+                {
+                    accIds.add(oldCon.AccountId);
+                    accIds.add(newCon.AccountId);
+                }
+                else 
+                {
+                    accIds.add(newCon.AccountId);
+                }
+            }
+            else 
+            {
+                accIds.add(newCon.AccountId);
+            }
+        }
+          
+        List<Account> accList = [Select Id,nop__c,(Select Id from Contacts) from Account  where Id IN : accIds];
+        List<Account> acctList = new List<Account>();
+        
+        if(!accList.isEmpty())
+        {
+            for(Account acc : accList)
+            {
+                acc.nop__c = acc.Contacts.size();
+                acctList.add(acc);
+            }
+        }
+        
+        if(!acctList.isEmpty())
+        {
+            update acctList;
+        }
+    }
+}
