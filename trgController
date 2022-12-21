@@ -53,3 +53,79 @@ public class trgController
         }
     }
 }
+
+
+
+
+//CORRECT CODE
+//trigger to count number of contacts related to an account
+trigger trg2 on Contact(after Insert,after Update,after Delete,after Undelete)
+{
+    set<Id> accIds = new Set<Id>();
+    
+    if(trigger.isAfter && (trigger.isInsert || trigger.isUndelete))
+    {
+        if(!trigger.new.isEmpty())
+        {
+            for(Contact con : trigger.new)
+            {
+                if(con.AccountId != null)
+                {
+                    accIds.add(con.AccountId);
+                }
+            }
+        }
+    }
+    
+    if(trigger.isAfter && trigger.isUpdate)
+    {
+        if(!trigger.new.isEmpty())
+        {
+            for(Contact con : Trigger.new)
+            {
+                if(con.AccountId != Trigger.oldMap.get(con.id).AccountId)
+                {
+                    if(Trigger.oldMap.get(con.id).AccountId !=null)
+                    {
+                       accIds.add(Trigger.oldMap.get(con.id).AccountId);
+                    }
+                    if(con.AccountId != null)
+                    {
+                       accIds.add(con.AccountId);
+                    }
+                }
+            }
+        }
+    }
+    
+    if(trigger.isAfter && trigger.isDelete)
+    {
+        if(!trigger.old.isEmpty())
+        {
+            for(Contact con : trigger.old)
+            {
+                accIds.add(con.AccountId);
+            }
+        }
+    }
+    
+    if(!accIds.isEmpty())
+    {
+        List<Account> accList = [Select Id,nop__c,(Select Id from Contacts) from Account where Id IN : accIds];
+        List<Account> acctList = new List<Account>();
+        
+        if(!accList.isEmpty())
+        {
+            for(Account acc : accList)
+            {
+                acc.nop__c = acc.Contacts.size();
+                acctList.add(acc);
+            }
+        }
+        
+        if(!acctList.isEmpty())
+        {
+            update acctList;
+        }
+    }
+}
